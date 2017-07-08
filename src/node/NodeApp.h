@@ -6,7 +6,7 @@ enum{
 	MAX_BACKOFF_TRIALS = 5
 };
 
-typedef enum nodeStates {ORPHAN, CONNECTING, CONNECTED, SUBSCRIBING, SUBSCRIBED} nodeStates;
+typedef enum nodeStates {ORPHAN, CONNECTING, CONNECTED, SUBSCRIBING, SUBSCRIBED, PUBLISHING} nodeStates;
 
 enum topicIDs{
 	TEMPERATURE=0,

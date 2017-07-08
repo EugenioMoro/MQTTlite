@@ -23,6 +23,7 @@ implementation{
 	void addNewNode(uint8_t nodeId){
 		nodeCount++;
 		nodes[nodeCount-1].nodeId=nodeId;
+		nodes[nodeCount-1].pubsn=0;
 		//initialize all the topics
 		for (i=0; i<3; i++){
 			nodes[nodeCount-1].topics[i].topicId=i;
@@ -67,6 +68,19 @@ implementation{
 			subpkt->pktId=SUBACK_ID;
 			subpkt->nodeId=addr;
 			if(call AMSend.send(addr, &pkt, sizeof(SubackPKT)) == SUCCESS) {
+				radioIsBusy = TRUE;
+			}
+		}
+	}
+	
+	void sendPuback(uint8_t addr, uint8_t pubsn){
+		printf("PANC: Sending puback message\n");
+		if(!radioIsBusy){
+			PubackPKT* pubpkt = (PubackPKT*) (call Packet.getPayload(&pkt, sizeof(SubackPKT)));
+			pubpkt->pktId=PUBACK_ID;
+			pubpkt->nodeId=addr;
+			pubpkt->pubsn=pubsn;
+			if(call AMSend.send(addr, &pkt, sizeof(PubackPKT)) == SUCCESS) {
 				radioIsBusy = TRUE;
 			}
 		}
@@ -115,6 +129,20 @@ implementation{
 					printf("PANC: received subscribe message from node %u\n", subpkt->nodeId);
 					sendSuback(subpkt->nodeId);
 					subscribeNode(subpkt->nodeId, subpkt->topicId, subpkt->qos);
+				}
+			}
+			if(len==sizeof(PublishPKT)){
+				PublishPKT* pubpkt = (PublishPKT*) payload;
+				printf("PANC: received publish message from node %u, data %u\n", pubpkt->nodeId, pubpkt->data);
+				if(pubpkt->qos==1){
+					if(pubpkt->pubsn==nodes[pubpkt->nodeId].pubsn){
+						nodes[pubpkt->nodeId].pubsn++;
+						//publish logic here
+						printf("PANC: received data is new\n");
+					} else{
+						printf("PANC: duplicated ack received");
+					}
+					sendPuback(pubpkt->nodeId, pubpkt->pubsn);
 				}
 			}
 		return msg;

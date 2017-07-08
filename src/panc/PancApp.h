@@ -11,7 +11,8 @@ typedef struct topic{
 
 typedef struct node{
 	uint8_t nodeId;
-	topic topics[3];	
+	topic topics[3];
+	uint8_t pubsn;	
 } node;
 
 enum topicIDs{

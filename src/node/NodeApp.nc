@@ -4,7 +4,7 @@
 module NodeApp{
 	uses interface Boot;
 	uses interface Leds;
-	uses interface Timer<TMilli> as GeneralPurposeTimer;
+	uses interface Timer<TMilli> as PublishTimer;
 	uses interface Timer<TMilli> as ResendTimer;
 	uses interface Packet;
 	uses interface AMPacket;
@@ -25,6 +25,12 @@ implementation{
 	uint8_t currentTopic=0;
 	uint8_t currentQos;
 	
+	//publish related
+	uint8_t selfTopic;
+	uint8_t pubSN=0;
+	uint16_t data;
+	uint8_t pubQos;
+	
 	void SendConnect() {
 		printf("NODE %u: Sending connect message\n", TOS_NODE_ID);
 		nodeState=CONNECTING;
@@ -40,6 +46,29 @@ implementation{
 				radioIsBusy=TRUE;
 			}
 		}
+	}
+	
+	void publishSomething(){
+		PublishPKT * pubpkt = (PublishPKT *)(call Packet.getPayload(&pkt, sizeof(PublishPKT)));
+		pubpkt->pktId=PUBLISH_ID;
+		pubpkt->nodeId=TOS_NODE_ID;
+		pubpkt->topicId=selfTopic;
+		pubpkt->data= data;
+		pubpkt->pubsn=pubSN;
+		if(call Random.rand16()%2){
+			pubpkt->qos=1;
+			pubQos=1;
+			waitForAck=TRUE;
+			printf("NODE %u: publishing to topic %u with Qos 1 - SN %u\n", TOS_NODE_ID, selfTopic, pubSN);
+			nodeState=PUBLISHING;
+		} else {
+			pubpkt->qos=0;
+			pubQos=0;
+			printf("NODE %u: publishing to topic %u with Qos 0\n", TOS_NODE_ID, selfTopic);
+		}
+		if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PublishPKT)) == SUCCESS) {
+				radioIsBusy = TRUE;
+			}
 	}
 	
 		void sendSubscribe(uint8_t topicId, bool qos) {
@@ -59,15 +88,18 @@ implementation{
 			printf("Node %u: Sending subscribe for topic %u with QoS %u\n", TOS_NODE_ID, topicId, qos);
 		}
 	}
-	
+	task void startPublishing(){
+		call PublishTimer.startPeriodic(call Random.rand16()*100);
+	}
 	void randomSubscribe(){
 		//if attempt to subscribe has been done 3 times (1 attempt per topic) then set subscribed and stop
 		if(currentTopic>2){
 			nodeState=SUBSCRIBED;
+			post startPublishing();
 			return;
 		}
-		if(call Random.rand16()%2==1){//RANDOMLY DECIDES IF SUBSCRIBE OR NOT, if subscribing then send the new sub message else recursive
-			currentQos=(call Random.rand16()%2);
+		if(1-((call Random.rand16()%2)*(call Random.rand16()%2)*(call Random.rand16()%2))){//call Random.rand16()%2==1){//RANDOMLY DECIDES IF SUBSCRIBE OR NOT, if subscribing then send the new sub message else recursive
+			currentQos=(1-((call Random.rand16()%2)*(call Random.rand16()%2)));
 			sendSubscribe(currentTopic, currentQos);
 		}
 	}
@@ -81,15 +113,13 @@ implementation{
 		randomSubscribe();
 	}
 
-event void GeneralPurposeTimer.fired(){
-		
-	}
 
 	event void Boot.booted(){
 		call Leds.led0On();
 		call AMControl.start();
 		nodeState = ORPHAN;
-		printf("Mote %u: Booted\n", TOS_NODE_ID);
+		selfTopic=(call Random.rand16()%2);
+		printf("Node %u: Booted\n", TOS_NODE_ID);
 	}
 
 	event void AMControl.stopDone(error_t error){
@@ -113,10 +143,11 @@ event void GeneralPurposeTimer.fired(){
 
 
 	event void ResendTimer.fired(){
-		printf("NODE %u: Ack not received, resending...\n", TOS_NODE_ID);
+		printf("Node %u: Ack not received, resending...\n", TOS_NODE_ID);
 		switch (nodeState){
 			case CONNECTING:SendConnect(); return;
-			case SUBSCRIBING:sendSubscribe(currentTopic,currentQos); return; 
+			case SUBSCRIBING:sendSubscribe(currentTopic,currentQos); return;
+			case PUBLISHING:publishSomething(); return;
 		}
 	}
 	event message_t * Receive.receive(message_t * msg, void * payload, uint8_t len) {
@@ -136,6 +167,7 @@ event void GeneralPurposeTimer.fired(){
 			SubackPKT* subackPkt = (SubackPKT *) payload;
 			if(subackPkt->pktId==SUBACK_ID && subackPkt->nodeId==TOS_NODE_ID){
 				call ResendTimer.stop();
+				printf("NODE %u: SUBACK received\n", TOS_NODE_ID);
 				waitForAck=FALSE;
 				if(nodeState==SUBSCRIBING){
 					currentTopic++;
@@ -143,5 +175,24 @@ event void GeneralPurposeTimer.fired(){
 					}
 			}
 		}
+		if(len==sizeof(PubackPKT)){
+			PubackPKT* puback = (PubackPKT*) payload;
+			if(puback->pktId==PUBACK_ID && puback->nodeId==TOS_NODE_ID){
+				call ResendTimer.stop();
+				printf("NODE %u: PUBACK received\n", TOS_NODE_ID);
+				nodeState=SUBSCRIBED;
+				waitForAck=FALSE;
+			}
+		}
 	return msg; }
+
+	event void PublishTimer.fired(){
+		if(nodeState==PUBLISHING){
+			printf("NODE %u: Cannot publish: node is busy\n", TOS_NODE_ID);
+			return;
+		}
+		if(pubQos) pubSN++;
+		data = call Random.rand16();
+		publishSomething();
+	}
 }

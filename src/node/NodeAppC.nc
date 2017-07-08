@@ -18,7 +18,7 @@ implementation{
 		
 	App.Boot -> MainC;
 	App.Leds -> LedsC;
-	App.GeneralPurposeTimer -> GeneralPurposeTimer;
+	App.PublishTimer -> GeneralPurposeTimer;
 	App.ResendTimer -> ResendTimer;
 	App.Random -> RandomC;
 	App.Packet -> AMSenderC;
