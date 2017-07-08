@@ -1,0 +1,13 @@
+#ifndef NODEAPP_H
+#define NODEAPP_H
+enum{
+	TIMER_PERIOD_MILLI = 250,
+	AM_CHANNEL = 6,
+	MAX_BACKOFF_TRIALS = 5
+};
+
+typedef enum nodeStates {ORPHAN, CONNECTING, CONNECTED, SUBSCRIBING, SUBSCRIBED} nodeStates;
+
+
+
+#endif /* NODEAPP_H */

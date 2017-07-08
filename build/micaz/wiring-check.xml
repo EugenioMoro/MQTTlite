@@ -1,0 +1,815 @@
+<nesc xmlns="http://www.tinyos.net/nesC">
+  <wiring>
+    <wire loc="54:/home/user/tinyos-main/tos/system/TinySchedulerC.nc">
+      <from><interface-ref name="TaskBasic" scoped="" ref="0x40350368"/></from>
+      <to><interface-ref name="TaskBasic" scoped="" ref="0x403d0564"/></to>
+    </wire>
+    <wire loc="53:/home/user/tinyos-main/tos/system/TinySchedulerC.nc">
+      <from><interface-ref name="Scheduler" scoped="" ref="0x4034adf8"/></from>
+      <to><interface-ref name="Scheduler" scoped="" ref="0x403d1d20"/></to>
+    </wire>
+    <wire loc="55:/home/user/tinyos-main/tos/system/TinySchedulerC.nc">
+      <from><interface-ref name="McuSleep" scoped="" ref="0x403d51dc"/></from>
+      <to><interface-ref name="McuSleep" scoped="" ref="0x403df414"/></to>
+    </wire>
+  </wiring>
+  <components>
+    <component qname="BlinkC" loc="50:/home/user/eclipse_workspace/MQTT/src/BlinkC.nc" safe="">
+      <documentation loc="43:/home/user/eclipse_workspace/MQTT/src/BlinkC.nc">
+        <short>&#10; Implementation for Blink application.</short>
+        <long>&#10; Implementation for Blink application.  Toggle the red LED when a&#10; Timer fires.&#10;*</long>
+      </documentation>
+      <module/>
+    </component>
+    <component qname="TinySchedulerC" loc="46:/home/user/tinyos-main/tos/system/TinySchedulerC.nc">
+      <documentation loc="34:/home/user/tinyos-main/tos/system/TinySchedulerC.nc">
+        <short>&#10; The TinyOS scheduler.</short>
+        <long>&#10; The TinyOS scheduler. It provides two interfaces: Scheduler,&#10; for TinyOS to initialize and run tasks, and TaskBasic, the simplext&#10; class of TinyOS tasks (reserved always at-most-once posting,&#10; FIFO, parameter-free). For details and information on how to&#10; replace the scheduler, refer to TEP 106.&#10;&#10; @author  Phil Levis&#10; @date    August 7 2005&#10; @see     TEP 106: Tasks and Schedulers&#10;</long>
+      </documentation>
+      <configuration/>
+    </component>
+    <component qname="SchedulerBasicP" loc="54:/home/user/tinyos-main/tos/system/SchedulerBasicP.nc" safe="">
+      <module/>
+    </component>
+    <component qname="McuSleepC" loc="48:/home/user/tinyos-main/tos/chips/atm128/McuSleepC.nc" safe="">
+      <documentation loc="34:/home/user/tinyos-main/tos/chips/atm128/McuSleepC.nc">
+        <short>&#10; Implementation of TEP 112 (Microcontroller Power Management) for&#10; the Atmega128.</short>
+        <long>&#10; Implementation of TEP 112 (Microcontroller Power Management) for&#10; the Atmega128. Power state calculation code copied from Rob&#10; Szewczyk's 1.x code in HPLPowerManagementM.nc.&#10;&#10; &#60;pre>&#10;  $Id: McuSleepC.nc,v 1.11 2010-06-29 22:07:43 scipio Exp $&#10; &#60;/pre>&#10;&#10; @author Philip Levis&#10; @author Robert Szewczyk&#10; @date   October 26, 2005&#10;</long>
+      </documentation>
+      <module/>
+    </component>
+  </components>
+  <interfaces>
+    <interface provided="0" name="Timer0" ref="0x403f95b0" loc="52:/home/user/eclipse_workspace/MQTT/src/BlinkC.nc">
+      <component-ref qname="BlinkC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="Timer0" scoped="" ref="0x403f95b0"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="Timer"/>
+        <arguments>
+          <type-tag size="I:2" alignment="I:1"><struct-ref ref="0x403adec8"/>
+            <typename><typedef-ref name="TMilli" ref="0x403aa0c4"/></typename>
+          </type-tag>
+        </arguments>
+      </instance>
+      <interface-functions>
+        <function-ref name="getNow" scoped="" ref="0x403f8010"/>
+        <function-ref name="fired" scoped="" ref="0x403ef2bc"/>
+        <function-ref name="startPeriodicAt" scoped="" ref="0x403ef97c"/>
+        <function-ref name="isOneShot" scoped="" ref="0x403ef73c"/>
+        <function-ref name="getdt" scoped="" ref="0x403f8490"/>
+        <function-ref name="gett0" scoped="" ref="0x403f8250"/>
+        <function-ref name="isRunning" scoped="" ref="0x403ef4fc"/>
+        <function-ref name="startPeriodic" scoped="" ref="0x403f9b84"/>
+        <function-ref name="startOneShotAt" scoped="" ref="0x403efc7c"/>
+        <function-ref name="startOneShot" scoped="" ref="0x403f9dec"/>
+        <function-ref name="stop" scoped="" ref="0x403ef07c"/>
+      </interface-functions>
+    </interface>
+    <interface provided="0" name="Boot" ref="0x403fadd8" loc="56:/home/user/eclipse_workspace/MQTT/src/BlinkC.nc">
+      <component-ref qname="BlinkC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="Boot" scoped="" ref="0x403fadd8"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="Boot"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="booted" scoped="" ref="0x40401010"/>
+      </interface-functions>
+    </interface>
+    <interface provided="0" name="Timer1" ref="0x403f8810" loc="53:/home/user/eclipse_workspace/MQTT/src/BlinkC.nc">
+      <component-ref qname="BlinkC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="Timer1" scoped="" ref="0x403f8810"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="Timer"/>
+        <arguments>
+          <type-tag size="I:2" alignment="I:1"><struct-ref ref="0x403adec8"/>
+            <typename><typedef-ref name="TMilli" ref="0x403aa0c4"/></typename>
+          </type-tag>
+        </arguments>
+      </instance>
+      <interface-functions>
+        <function-ref name="getNow" scoped="" ref="0x403fd1ec"/>
+        <function-ref name="fired" scoped="" ref="0x403f7508"/>
+        <function-ref name="startPeriodicAt" scoped="" ref="0x403f7bc8"/>
+        <function-ref name="isOneShot" scoped="" ref="0x403f7988"/>
+        <function-ref name="getdt" scoped="" ref="0x403fd66c"/>
+        <function-ref name="gett0" scoped="" ref="0x403fd42c"/>
+        <function-ref name="isRunning" scoped="" ref="0x403f7748"/>
+        <function-ref name="startPeriodic" scoped="" ref="0x403f8de4"/>
+        <function-ref name="startOneShotAt" scoped="" ref="0x403f7ec8"/>
+        <function-ref name="startOneShot" scoped="" ref="0x403f7060"/>
+        <function-ref name="stop" scoped="" ref="0x403f72c8"/>
+      </interface-functions>
+    </interface>
+    <interface provided="0" name="Leds" ref="0x404049a4" loc="55:/home/user/eclipse_workspace/MQTT/src/BlinkC.nc">
+      <component-ref qname="BlinkC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="Leds" scoped="" ref="0x404049a4"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="Leds"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="led0Off" scoped="" ref="0x40404b64"/>
+        <function-ref name="led0Toggle" scoped="" ref="0x40404c40"/>
+        <function-ref name="led1On" scoped="" ref="0x40404d1c"/>
+        <function-ref name="led1Toggle" scoped="" ref="0x40404df8"/>
+        <function-ref name="led2Toggle" scoped="" ref="0x40404ed4"/>
+        <function-ref name="get" scoped="" ref="0x403fa010"/>
+        <function-ref name="led1Off" scoped="" ref="0x403fa0ec"/>
+        <function-ref name="led2Off" scoped="" ref="0x403fa45c"/>
+        <function-ref name="set" scoped="" ref="0x403fa1c8"/>
+        <function-ref name="led0On" scoped="" ref="0x403fa2a4"/>
+        <function-ref name="led2On" scoped="" ref="0x403fa380"/>
+      </interface-functions>
+    </interface>
+    <interface provided="0" name="Timer2" ref="0x403fd9ec" loc="54:/home/user/eclipse_workspace/MQTT/src/BlinkC.nc">
+      <component-ref qname="BlinkC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="Timer2" scoped="" ref="0x403fd9ec"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="Timer"/>
+        <arguments>
+          <type-tag size="I:2" alignment="I:1"><struct-ref ref="0x403adec8"/>
+            <typename><typedef-ref name="TMilli" ref="0x403aa0c4"/></typename>
+          </type-tag>
+        </arguments>
+      </instance>
+      <interface-functions>
+        <function-ref name="getNow" scoped="" ref="0x403fb400"/>
+        <function-ref name="fired" scoped="" ref="0x403fc720"/>
+        <function-ref name="startPeriodicAt" scoped="" ref="0x403fcde0"/>
+        <function-ref name="isOneShot" scoped="" ref="0x403fcba0"/>
+        <function-ref name="getdt" scoped="" ref="0x403fb880"/>
+        <function-ref name="gett0" scoped="" ref="0x403fb640"/>
+        <function-ref name="isRunning" scoped="" ref="0x403fc960"/>
+        <function-ref name="startPeriodic" scoped="" ref="0x403fc010"/>
+        <function-ref name="startOneShotAt" scoped="" ref="0x403fb100"/>
+        <function-ref name="startOneShot" scoped="" ref="0x403fc278"/>
+        <function-ref name="stop" scoped="" ref="0x403fc4e0"/>
+      </interface-functions>
+    </interface>
+    <interface provided="1" name="TaskBasic" ref="0x40350368" loc="48:/home/user/tinyos-main/tos/system/TinySchedulerC.nc">
+      <component-ref qname="TinySchedulerC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="TaskBasic" scoped="" ref="0x40350368"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="TaskBasic"/>
+      </instance>
+      <interface-parameters>
+        <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+          <typename><typedef-ref name="uint8_t" ref="0x4001a81c"/></typename>
+        </type-int>
+      </interface-parameters>
+      <interface-functions>
+        <function-ref name="postTask" scoped="" ref="0x40350528"/>
+        <function-ref name="runTask" scoped="" ref="0x40350604"/>
+      </interface-functions>
+    </interface>
+    <interface provided="1" name="Scheduler" ref="0x4034adf8" loc="47:/home/user/tinyos-main/tos/system/TinySchedulerC.nc">
+      <component-ref qname="TinySchedulerC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="Scheduler" scoped="" ref="0x4034adf8"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="Scheduler"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="init" scoped="" ref="0x4034c010"/>
+        <function-ref name="taskLoop" scoped="" ref="0x4034c0ec"/>
+        <function-ref name="runNextTask" scoped="" ref="0x4034c1c8"/>
+      </interface-functions>
+    </interface>
+    <interface provided="1" name="TaskBasic" ref="0x403d0564" loc="56:/home/user/tinyos-main/tos/system/SchedulerBasicP.nc">
+      <component-ref qname="SchedulerBasicP"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="TaskBasic" scoped="" ref="0x403d0564"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="TaskBasic"/>
+      </instance>
+      <interface-parameters>
+        <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+          <typename><typedef-ref name="uint8_t" ref="0x4001a81c"/></typename>
+        </type-int>
+      </interface-parameters>
+      <interface-functions>
+        <function-ref name="postTask" scoped="" ref="0x403d0724"/>
+        <function-ref name="runTask" scoped="" ref="0x403d0800"/>
+      </interface-functions>
+    </interface>
+    <interface provided="0" name="McuSleep" ref="0x403d51dc" loc="57:/home/user/tinyos-main/tos/system/SchedulerBasicP.nc">
+      <component-ref qname="SchedulerBasicP"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="McuSleep" scoped="" ref="0x403d51dc"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="McuSleep"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="sleep" scoped="" ref="0x403d539c"/>
+      </interface-functions>
+    </interface>
+    <interface provided="1" name="Scheduler" ref="0x403d1d20" loc="55:/home/user/tinyos-main/tos/system/SchedulerBasicP.nc">
+      <component-ref qname="SchedulerBasicP"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="Scheduler" scoped="" ref="0x403d1d20"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="Scheduler"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="init" scoped="" ref="0x403d1ee0"/>
+        <function-ref name="taskLoop" scoped="" ref="0x403d0010"/>
+        <function-ref name="runNextTask" scoped="" ref="0x403d00ec"/>
+      </interface-functions>
+    </interface>
+    <interface provided="0" name="McuPowerOverride" ref="0x403e3688" loc="54:/home/user/tinyos-main/tos/chips/atm128/McuSleepC.nc">
+      <component-ref qname="McuSleepC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="McuPowerOverride" scoped="" ref="0x403e3688"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="McuPowerOverride"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="lowestState" scoped="" ref="0x403e3848"/>
+      </interface-functions>
+    </interface>
+    <interface provided="1" name="McuSleep" ref="0x403df414" loc="50:/home/user/tinyos-main/tos/chips/atm128/McuSleepC.nc">
+      <component-ref qname="McuSleepC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="McuSleep" scoped="" ref="0x403df414"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="McuSleep"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="sleep" scoped="" ref="0x403df5d4"/>
+      </interface-functions>
+    </interface>
+    <interface provided="1" name="McuPowerState" ref="0x403e4068" loc="51:/home/user/tinyos-main/tos/chips/atm128/McuSleepC.nc">
+      <component-ref qname="McuSleepC"/>
+      <type-interface size="I:2" alignment="I:1"><interface-ref name="McuPowerState" scoped="" ref="0x403e4068"/></type-interface>
+      <instance>
+        <interfacedef-ref qname="McuPowerState"/>
+      </instance>
+      <interface-functions>
+        <function-ref name="update" scoped="" ref="0x403e4228"/>
+      </interface-functions>
+    </interface>
+  </interfaces>
+  <interfacedefs>
+    <interfacedef qname="Timer" loc="53:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+      <documentation loc="36:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <short>&#10; A Timer is TinyOS's general purpose timing interface.</short>
+        <long>&#10; A Timer is TinyOS's general purpose timing interface. For more precise&#10; timing, you may wish to use a (platform-specific) component offering&#10; an Alarm interface.&#10;&#10; &#60;p>A Timer is parameterised by its &#34;precision&#34; (milliseconds,&#10; microseconds, etc), identified by a type. This prevents, e.g.,&#10; unintentionally mixing components expecting milliseconds with those&#10; expecting microseconds as those interfaces have a different type.&#10;&#10; &#60;p>See TEP102 for more details.&#10;&#10; @param precision_tag A type indicating the precision of this Alarm.&#10;&#10; @author Cory Sharp &#60;cssharp@eecs.berkeley.edu>&#10;</long>
+      </documentation>
+      <parameters>
+        <typedef name="precision_tag" ref="0x403ee300" loc="53:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <interfacedef-ref qname="Timer"/>
+          <type-var size="U:" alignment="U:"><typedef-ref name="precision_tag" scoped="" ref="0x403ee300"/></type-var>
+        </typedef>
+      </parameters>
+      <function command="" provided="0" name="getNow" ref="0x403f292c" loc="136:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="132:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Return the current time.</short>
+          <long>&#10; Return the current time.&#10; @return Current time.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+            <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function event="" provided="0" name="fired" ref="0x403f483c" loc="83:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="80:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Signaled when the timer expires (one-shot) or repeats (periodic).</short>
+          <long>&#10; Signaled when the timer expires (one-shot) or repeats (periodic).&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="startPeriodicAt" ref="0x403f38f0" loc="114:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="100:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Set a periodic timer to repeat every dt time units.</short>
+          <long>&#10; Set a periodic timer to repeat every dt time units. Replaces any&#10; current timer settings. The &#60;code>fired&#60;/code> will be signaled every&#10; dt units (first event at t0+dt units). Periodic timers set in the past&#10; will get a bunch of events in succession, until the timer &#34;catches up&#34;.&#10;&#10; &#60;p>Because the current time may wrap around, it is possible to use&#10; values of t0 greater than the &#60;code>getNow&#60;/code>'s result. These&#10; values represent times in the past, i.e., the time at which getNow()&#10; would last of returned that value.&#10;&#10; @param t0 Base time for timer.&#10; @param dt Time until the timer fires.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </function-parameters>
+        </type-function>
+        <parameters>
+          <variable name="t0" ref="0x403f35c0" loc="114:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </variable>
+          <variable name="dt" ref="0x403f3798" loc="114:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </variable>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="isOneShot" ref="0x403f3148" loc="98:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="94:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Check if this is a one-shot timer.</short>
+          <long>&#10; Check if this is a one-shot timer.&#10; @return TRUE for one-shot timers, FALSE for periodic timers.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+            <typename><typedef-ref name="bool" ref="0x4034876c"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="getdt" ref="0x403f9240" loc="151:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="146:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Return the delay or period for the previously started timer.</short>
+          <long>&#10; Return the delay or period for the previously started timer. The next&#10; fired event will occur at gett0() + getdt().&#10; @return Timer's interval.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+            <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="gett0" ref="0x403f2d38" loc="144:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="138:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Return the time anchor for the previously started timer or the time of&#10; the previous event for periodic timers.</short>
+          <long>&#10; Return the time anchor for the previously started timer or the time of&#10; the previous event for periodic timers. The next fired event will occur&#10; at gett0() + getdt().&#10; @return Timer's base time.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+            <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="isRunning" ref="0x403f4c94" loc="92:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="86:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Check if timer is running.</short>
+          <long>&#10; Check if timer is running. Periodic timers run until stopped or&#10; replaced, one-shot timers run until their deadline expires.&#10;&#10; @return TRUE if the timer is still running.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+            <typename><typedef-ref name="bool" ref="0x4034876c"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="startPeriodic" ref="0x403ee90c" loc="64:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="56:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Set a periodic timer to repeat every dt time units.</short>
+          <long>&#10; Set a periodic timer to repeat every dt time units. Replaces any&#10; current timer settings. Equivalent to startPeriodicAt(getNow(),&#10; dt). The &#60;code>fired&#60;/code> will be signaled every dt units (first&#10; event in dt units).&#10;&#10; @param dt Time until the timer fires.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </function-parameters>
+        </type-function>
+        <parameters>
+          <variable name="dt" ref="0x403ee7bc" loc="64:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </variable>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="startOneShotAt" ref="0x403f2340" loc="129:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="116:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Set a single-short timer to time t0+dt.</short>
+          <long>&#10; Set a single-short timer to time t0+dt. Replaces any current timer&#10; settings. The &#60;code>fired&#60;/code> will be signaled when the timer&#10; expires. Timers set in the past will fire &#34;soon&#34;.&#10;&#10; &#60;p>Because the current time may wrap around, it is possible to use&#10; values of t0 greater than the &#60;code>getNow&#60;/code>'s result. These&#10; values represent times in the past, i.e., the time at which getNow()&#10; would last of returned that value.&#10;&#10; @param t0 Base time for timer.&#10; @param dt Time until the timer fires.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </function-parameters>
+        </type-function>
+        <parameters>
+          <variable name="t0" ref="0x403f2010" loc="129:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </variable>
+          <variable name="dt" ref="0x403f21e8" loc="129:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </variable>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="startOneShot" ref="0x403f4010" loc="73:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="66:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Set a single-short timer to some time units in the future.</short>
+          <long>&#10; Set a single-short timer to some time units in the future. Replaces&#10; any current timer settings. Equivalent to startOneShotAt(getNow(),&#10; dt). The &#60;code>fired&#60;/code> will be signaled when the timer expires.&#10;&#10; @param dt Time until the timer fires.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </function-parameters>
+        </type-function>
+        <parameters>
+          <variable name="dt" ref="0x403eee1c" loc="73:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+            <type-int cname="unsigned long" unsigned="" size="I:4" alignment="I:1">
+              <typename><typedef-ref name="uint32_t" ref="0x4001b494"/></typename>
+            </type-int>
+          </variable>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="stop" ref="0x403f44ac" loc="78:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+        <documentation loc="75:/home/user/tinyos-main/tos/lib/timer/Timer.nc">
+          <short>&#10; Cancel a timer.</short>
+          <long>&#10; Cancel a timer.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Timer"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+    <interfacedef qname="Boot" loc="50:/home/user/tinyos-main/tos/interfaces/Boot.nc">
+      <documentation loc="42:/home/user/tinyos-main/tos/interfaces/Boot.nc">
+        <short>&#10; Interface that notifies components when TinyOS has booted&#10; (initialized all of its components), as discussed in TEP 107.</short>
+        <long>&#10; Interface that notifies components when TinyOS has booted&#10; (initialized all of its components), as discussed in TEP 107.&#10;&#10; @author Philip Levis&#10; @date   January 5 2005&#10;</long>
+      </documentation>
+      <function event="" provided="0" name="booted" ref="0x403fab54" loc="60:/home/user/tinyos-main/tos/interfaces/Boot.nc">
+        <documentation loc="51:/home/user/tinyos-main/tos/interfaces/Boot.nc">
+          <short>&#10; Signaled when the system has booted successfully.</short>
+          <long>&#10; Signaled when the system has booted successfully. Components can&#10; assume the system has been initialized properly. Services may&#10; need to be started to work, however.&#10;&#10; @see StdControl&#10; @see SplitConrol&#10; @see TEP 107: Boot Sequence&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Boot"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+    <interfacedef qname="Leds" loc="51:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+      <documentation loc="33:/home/user/tinyos-main/tos/types/Leds.h">
+        <short>&#10; Constants for manipulating LEDs.</short>
+        <long>&#10; Constants for manipulating LEDs.&#10;&#10; @author Philip Levis&#10; @date   March 21, 2005&#10;</long>
+      </documentation>
+      <function command="" provided="0" name="led0Off" ref="0x403ffbc4" loc="61:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="58:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Turn off LED 0.</short>
+          <long>&#10; Turn off LED 0. The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led0Toggle" ref="0x40406010" loc="67:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="63:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Toggle LED 0; if it was off, turn it on, if was on, turn it off.</short>
+          <long>&#10; Toggle LED 0; if it was off, turn it on, if was on, turn it off.&#10; The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led1On" ref="0x40406458" loc="72:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="69:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Turn on LED 1.</short>
+          <long>&#10; Turn on LED 1. The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led1Toggle" ref="0x40406c58" loc="83:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="79:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Toggle LED 1; if it was off, turn it on, if was on, turn it off.</short>
+          <long>&#10; Toggle LED 1; if it was off, turn it on, if was on, turn it off.&#10; The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led2Toggle" ref="0x404058bc" loc="100:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="96:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Toggle LED 2; if it was off, turn it on, if was on, turn it off.</short>
+          <long>&#10; Toggle LED 2; if it was off, turn it on, if was on, turn it off.&#10; The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="get" ref="0x40405d2c" loc="117:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="103:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Get the current LED settings as a bitmask.</short>
+          <long>&#10; Get the current LED settings as a bitmask. Each bit corresponds to&#10; whether an LED is on; bit 0 is LED 0, bit 1 is LED 1, etc. You can&#10; also use the enums LEDS_LED0, LEDS_LED1. For example, this expression&#10; will determine whether LED 2 is on:&#10;&#10; &#60;pre> (call Leds.get() &#38; LEDS_LED2) &#60;/pre>&#10;&#10; This command supports up to 8 LEDs; if a platform has fewer, then&#10; those LEDs should always be off (their bit is zero). Also see&#10; &#60;tt>set()&#60;/tt>.&#10;&#10; @return a bitmask describing which LEDs are on and which are off&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+            <typename><typedef-ref name="uint8_t" ref="0x4001a81c"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led1Off" ref="0x40406848" loc="77:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="74:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Turn off LED 1.</short>
+          <long>&#10; Turn off LED 1. The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="set" ref="0x4040460c" loc="134:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="120:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Set the current LED configuration using a bitmask.</short>
+          <long>&#10; Set the current LED configuration using a bitmask.  Each bit&#10; corresponds to whether an LED is on; bit 0 is LED 0, bit 1 is LED&#10; 1, etc. You can also use the enums LEDS_LED0, LEDS_LED1. For example,&#10; this statement will configure the LEDs so LED 0 and LED 2 are on:&#10;&#10; &#60;pre> call Leds.set(LEDS_LED0 | LEDS_LED2); &#60;/pre>&#10;&#10; This statement will turn LED 1 on if it was not already:&#10;&#10; &#60;pre>call Leds.set(call Leds.get() | LEDS_LED1);&#60;/pre>&#10;&#10; @param  val   a bitmask describing the on/off settings of the LEDs&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+            <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+              <typename><typedef-ref name="uint8_t" ref="0x4001a81c"/></typename>
+            </type-int>
+          </function-parameters>
+        </type-function>
+        <parameters>
+          <variable name="val" ref="0x404044bc" loc="134:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+            <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+              <typename><typedef-ref name="uint8_t" ref="0x4001a81c"/></typename>
+            </type-int>
+          </variable>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led0On" ref="0x403ff7d4" loc="56:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="53:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Turn on LED 0.</short>
+          <long>&#10; Turn on LED 0. The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led2On" ref="0x404050bc" loc="89:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="86:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Turn on LED 2.</short>
+          <long>&#10; Turn on LED 2. The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="led2Off" ref="0x404054ac" loc="94:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+        <documentation loc="91:/home/user/tinyos-main/tos/interfaces/Leds.nc">
+          <short>&#10; Turn off LED 2.</short>
+          <long>&#10; Turn off LED 2. The color of this LED depends on the platform.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Leds"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+    <interfacedef qname="TaskBasic" loc="55:/home/user/tinyos-main/tos/interfaces/TaskBasic.nc">
+      <function command="" provided="0" name="postTask" ref="0x40351920" loc="67:/home/user/tinyos-main/tos/interfaces/TaskBasic.nc">
+        <documentation loc="57:/home/user/tinyos-main/tos/interfaces/TaskBasic.nc">
+          <short>&#10; Post this task to the TinyOS scheduler.</short>
+          <long>&#10; Post this task to the TinyOS scheduler. At some later time,&#10; depending on the scheduling policy, the scheduler will signal the&#10; &#60;tt>run()&#60;/tt> event. &#10;&#10; @return SUCCESS if task was successfuly&#10; posted; the semantics of a non-SUCCESS return value depend on the&#10; implementation of this interface (the class of task).&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="TaskBasic"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+            <typename><typedef-ref name="error_t" ref="0x40352484"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function event="" provided="0" name="runTask" ref="0x40351e08" loc="75:/home/user/tinyos-main/tos/interfaces/TaskBasic.nc">
+        <documentation loc="69:/home/user/tinyos-main/tos/interfaces/TaskBasic.nc">
+          <short>&#10; Event from the scheduler to run this task.</short>
+          <long>&#10; Event from the scheduler to run this task. Following the TinyOS&#10; concurrency model, the codes invoked from &#60;tt>run()&#60;/tt> signals&#10; execute atomically with respect to one another, but can be&#10; preempted by async commands/events.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="TaskBasic"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+    <interfacedef qname="Scheduler" loc="52:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+      <documentation loc="42:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+        <short> &#10; The interface to a TinyOS task scheduler.</short>
+        <long> &#10; The interface to a TinyOS task scheduler.&#10;&#10; @author Philip Levis&#10; @date   January 19 2005&#10; @see TEP 106: Tasks and Schedulers&#10; @see TEP 107: Boot Sequence&#10;</long>
+      </documentation>
+      <function command="" provided="0" name="init" ref="0x4034a314" loc="57:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+        <documentation loc="54:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+          <short> &#10; Initialize the scheduler.</short>
+          <long> &#10; Initialize the scheduler.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Scheduler"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="taskLoop" ref="0x4034abbc" loc="72:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+        <documentation loc="67:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+          <short>&#10; Enter an infinite task-running loop.</short>
+          <long>&#10; Enter an infinite task-running loop. Put the MCU into a low power&#10; state when the processor is idle (task queue empty, waiting for&#10; interrupts). This call never returns.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Scheduler"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+      <function command="" provided="0" name="runNextTask" ref="0x4034a724" loc="65:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+        <documentation loc="59:/home/user/tinyos-main/tos/interfaces/Scheduler.nc">
+          <short> &#10; Run the next task if one is waiting, otherwise return immediately.</short>
+          <long> &#10; Run the next task if one is waiting, otherwise return immediately. &#10;&#10; @return        whether a task was run -- TRUE indicates a task&#10;                ran, FALSE indicates there was no task to run.&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="Scheduler"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+            <typename><typedef-ref name="bool" ref="0x4034876c"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+    <interfacedef qname="McuSleep" loc="74:/home/user/tinyos-main/tos/interfaces/McuSleep.nc">
+      <documentation loc="63:/home/user/tinyos-main/tos/interfaces/McuSleep.nc">
+        <short>&#10; Interface to instruct the MCU to enter a low power state.</short>
+        <long>&#10; Interface to instruct the MCU to enter a low power state. TEP112&#10; describes how an MCU computes this state and how the Scheduler uses&#10; this interface to manage system power draw.&#10; &#10; @author Philip Levis&#10; @author Martin Turon &#60;mturon@xbow.com>&#10; @date   Oct 26, 2005&#10;&#10;</long>
+      </documentation>
+      <function command="" provided="0" name="sleep" ref="0x403d5010" loc="76:/home/user/tinyos-main/tos/interfaces/McuSleep.nc">
+        <documentation loc="75:/home/user/tinyos-main/tos/interfaces/McuSleep.nc">
+          <short> Called by the scheduler to put the MCU to sleep.</short>
+          <long> Called by the scheduler to put the MCU to sleep. *</long>
+        </documentation>
+        <interfacedef-ref qname="McuSleep"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+    <interfacedef qname="McuPowerOverride" loc="50:/home/user/tinyos-main/tos/interfaces/McuPowerOverride.nc">
+      <documentation loc="1:/home/user/tinyos-main/tos/platforms/micaz/hardware.h">
+        <short>                                                                     &#10;  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.</short>
+        <long>                                                                     &#10;  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By&#10;  downloading, copying, installing or using the software you agree to&#10;  this license.  If you do not agree to this license, do not download,&#10;  install, copy or use the software.&#10;&#10;  Copyright (c) 2004-2005 Crossbow Technology, Inc.&#10;  Copyright (c) 2002-2003 Intel Corporation.&#10;  Copyright (c) 2000-2003 The Regents of the University  of California.    &#10;  All rights reserved.&#10;&#10; Redistribution and use in source and binary forms, with or without&#10; modification, are permitted provided that the following conditions&#10; are met:&#10;&#10; - Redistributions of source code must retain the above copyright&#10;   notice, this list of conditions and the following disclaimer.&#10; - Redistributions in binary form must reproduce the above copyright&#10;   notice, this list of conditions and the following disclaimer in the&#10;   documentation and/or other materials provided with the&#10;   distribution.&#10; - Neither the name of the copyright holder nor the names of&#10;   its contributors may be used to endorse or promote products derived&#10;   from this software without specific prior written permission.&#10;&#10; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS&#10; &#34;AS IS&#34; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT&#10; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS&#10; FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL&#10; THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,&#10; INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES&#10; (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR&#10; SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)&#10; HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,&#10; STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)&#10; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED&#10; OF THE POSSIBILITY OF SUCH DAMAGE.&#10;&#10;  @author Jason Hill, Philip Levis, Nelson Lee, David Gay&#10;  @author Alan Broad &#60;abroad@xbow.com>&#10;  @author Matt Miller &#60;mmiller@xbow.com>&#10;  @author Martin Turon &#60;mturon@xbow.com>&#10;&#10;  $Id: hardware.h,v 1.8 2010-06-29 22:07:54 scipio Exp $&#10;</long>
+      </documentation>
+      <function command="" provided="0" name="lowestState" ref="0x403e3334" loc="62:/home/user/tinyos-main/tos/interfaces/McuPowerOverride.nc">
+        <documentation loc="52:/home/user/tinyos-main/tos/interfaces/McuPowerOverride.nc">
+          <short>&#10; Called when computing the low power state, in order to allow&#10; a high-level component to institute a lower bound.</short>
+          <long>&#10; Called when computing the low power state, in order to allow&#10; a high-level component to institute a lower bound. Because&#10; this command originates deep within the basic TinyOS scheduling&#10; mechanisms, it should be used very sparingly. Refer to TEP 112 for&#10; details.&#10;&#10; @return    the lowest power state the system can enter to meet the &#10;            requirements of this component&#10;</long>
+        </documentation>
+        <interfacedef-ref qname="McuPowerOverride"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-int cname="unsigned char" unsigned="" size="I:1" alignment="I:1">
+            <typename><typedef-ref name="mcu_power_t" ref="0x40395c1c"/></typename>
+          </type-int>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+    <interfacedef qname="McuPowerState" loc="46:/home/user/tinyos-main/tos/interfaces/McuPowerState.nc">
+      <documentation loc="35:/home/user/tinyos-main/tos/interfaces/McuPowerState.nc">
+        <short>&#10; Interface to instruct TinyOS that the low-power state of the MCU&#10; may have changed.</short>
+        <long>&#10; Interface to instruct TinyOS that the low-power state of the MCU&#10; may have changed. TEP 112 describes how an MCU computes this state&#10; and how the Scheduler uses this interface to manage system power&#10; draw.&#10; &#10; @author Philip Levis&#10; @date   Oct 26, 2005&#10; @see    TEP 112: Microcontroller Power Management&#10;</long>
+      </documentation>
+      <function command="" provided="0" name="update" ref="0x403dfde4" loc="52:/home/user/tinyos-main/tos/interfaces/McuPowerState.nc">
+        <documentation loc="47:/home/user/tinyos-main/tos/interfaces/McuPowerState.nc">
+          <short> &#10; Called by any component to tell TinyOS that the MCU low&#10; power state may have changed.</short>
+          <long> &#10; Called by any component to tell TinyOS that the MCU low&#10; power state may have changed. Generally, this should be&#10; called whenever a peripheral/timer is started/stopped. &#10;</long>
+        </documentation>
+        <interfacedef-ref qname="McuPowerState"/>
+        <type-function size="I:1" alignment="I:1">
+          <type-void size="I:1" alignment="I:1"></type-void>
+          <function-parameters>
+          </function-parameters>
+        </type-function>
+        <parameters>
+        </parameters>
+      </function>
+    </interfacedef>
+  </interfacedefs>
+  <tags>
+  </tags>
+  <variables>
+  </variables>
+  <constants>
+  </constants>
+  <functions>
+  </functions>
+  <typedefs>
+  </typedefs>
+</nesc>
