@@ -32,6 +32,19 @@ implementation{
 		printf("Panc: Node %u added into memory\n", nodes[nodeCount-1].nodeId);
 	}
 	
+	
+	void subscribeNode(uint8_t nodeId, uint8_t topicId, uint8_t qos){
+		for(i=0; i<=nodeCount; i++){
+			if(nodes[i].nodeId==nodeId){
+				nodes[i].topics[topicId].qos=qos;
+				nodes[i].topics[topicId].subscribed=TRUE;
+				printf("PANC: Node %u subscribed to topic %u with qos %u\n", nodeId, topicId, qos);
+				return;
+			}
+		}
+		printf("PANC: subscribe error: node not found in memory\n");
+	}
+	
 	void SendConnack(uint8_t addr) {
 		printf("PANC %u: Sending connack message\n");
 		if( ! radioIsBusy) {
@@ -47,6 +60,17 @@ implementation{
 		}
 	}
 	
+	void sendSuback(uint8_t addr){
+		printf("PANC: Sending suback message\n");
+		if(!radioIsBusy){
+			SubackPKT* subpkt = (SubackPKT*)(call Packet.getPayload(&pkt, sizeof(SubackPKT)));
+			subpkt->pktId=SUBACK_ID;
+			subpkt->nodeId=addr;
+			if(call AMSend.send(addr, &pkt, sizeof(SubackPKT)) == SUCCESS) {
+				radioIsBusy = TRUE;
+			}
+		}
+	}	
 
 	event void Boot.booted(){
 		call Leds.led0On();
@@ -83,8 +107,16 @@ implementation{
 				addNewNode(connectPKT->nodeID);
 				}
 			free(connectPKT);
+			return msg;
 			}
-			
+			if(len==sizeof(SubscribePKT)){
+				SubscribePKT* subpkt = (SubscribePKT*) payload;
+				if(subpkt->pktId==SUBSCRIBE_ID){
+					printf("PANC: received subscribe message from node %u\n", subpkt->nodeId);
+					sendSuback(subpkt->nodeId);
+					subscribeNode(subpkt->nodeId, subpkt->topicId, subpkt->qos);
+				}
+			}
 		return msg;
 	}
 }

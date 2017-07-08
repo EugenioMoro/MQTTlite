@@ -1,0 +1,6 @@
+.cache
+.externalToolBuilders
+.settings
+build
+.project
+.targetsOptions

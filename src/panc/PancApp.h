@@ -5,7 +5,7 @@ enum{ AM_CHANNEL=6};
 
 typedef struct topic{
 	uint8_t topicId;
-	bool qos;
+	uint8_t qos;
 	bool subscribed;
 } topic;
 
@@ -15,9 +15,9 @@ typedef struct node{
 } node;
 
 enum topicIDs{
-	TEMPERATURE=1,
-	HUMIDITY=2,
-	LUMINOSITY=3
+	TEMPERATURE=0,
+	HUMIDITY=1,
+	LUMINOSITY=2
 };
 
 #endif /* PANC_APP_H */

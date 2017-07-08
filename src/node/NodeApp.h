@@ -8,6 +8,12 @@ enum{
 
 typedef enum nodeStates {ORPHAN, CONNECTING, CONNECTED, SUBSCRIBING, SUBSCRIBED} nodeStates;
 
+enum topicIDs{
+	TEMPERATURE=0,
+	HUMIDITY=1,
+	LUMINOSITY=2
+};
+
 
 
 #endif /* NODEAPP_H */

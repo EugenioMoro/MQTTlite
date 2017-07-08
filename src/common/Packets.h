@@ -15,8 +15,8 @@ typedef nx_struct ConnackMessagePKT{
 typedef nx_struct SubscribePKT{
 	nx_uint8_t pktId;
 	nx_uint8_t nodeId;
-	nx_uint8_t topic;
-	nx_bool qos;
+	nx_uint8_t topicId;
+	nx_uint8_t qos;
 } SubscribePKT;
 
 typedef nx_struct SubackPKT{
