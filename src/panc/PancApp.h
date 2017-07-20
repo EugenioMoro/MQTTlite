@@ -2,10 +2,17 @@
 #define PANC_APP_H
 
 enum{ AM_CHANNEL=6};
+enum{
+	MAX_RETRY=3,
+	ACK_TO=30, //MILLISECONDS
+	MAX_NODES=8
+};
+	
 
 typedef struct topic{
 	uint8_t topicId;
 	uint8_t qos;
+	uint8_t seqn;
 	bool subscribed;
 } topic;
 

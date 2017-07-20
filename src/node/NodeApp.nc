@@ -18,12 +18,19 @@ implementation{
 	nodeStates nodeState;
 	bool radioIsBusy=FALSE;
 	bool waitForAck=FALSE;
+	uint8_t i;
 	//this is sometimes useful
 	bool lastMessageAcked=FALSE;
 	
 	//this is for random topic subscribing
 	uint8_t currentTopic=0;
 	uint8_t currentQos;
+	
+	//this data structure is for storing to which topic the node is sub and what qos level 
+	//the first bool realtes to subscription and second bool relates to qos
+	//this data structure is initialized with 0es and is lazy 
+	bool topics[3][2]= {{0,0},{0,0},{0,0}};
+	
 	
 	//publish related
 	uint8_t selfTopic;
@@ -72,6 +79,8 @@ implementation{
 	}
 	
 		void sendSubscribe(uint8_t topicId, bool qos) {
+			topics[topicId][0]=TRUE;
+			topics[topicId][1]=qos;
 		if( ! radioIsBusy) {
 			//build packet
 			SubscribePKT * subpkt = (SubscribePKT * )(call Packet.getPayload(&pkt,
@@ -89,12 +98,13 @@ implementation{
 		}
 	}
 	task void startPublishing(){
-		call PublishTimer.startPeriodic(call Random.rand16()*100);
+		call PublishTimer.startPeriodic(5000);
 	}
 	void randomSubscribe(){
 		//if attempt to subscribe has been done 3 times (1 attempt per topic) then set subscribed and stop
 		if(currentTopic>2){
 			nodeState=SUBSCRIBED;
+			printf("NODE %u: subscribe procedure done, starting publish procedure\n", TOS_NODE_ID);
 			post startPublishing();
 			return;
 		}
@@ -112,13 +122,13 @@ implementation{
 	task void triggerSubResend(){
 		randomSubscribe();
 	}
-
+	
 
 	event void Boot.booted(){
 		call Leds.led0On();
 		call AMControl.start();
 		nodeState = ORPHAN;
-		selfTopic=(call Random.rand16()%2);
+		selfTopic=(call Random.rand16()%3);
 		printf("Node %u: Booted\n", TOS_NODE_ID);
 	}
 
@@ -136,7 +146,7 @@ implementation{
 
 	event void AMSend.sendDone(message_t *msg, error_t error){
 		if(waitForAck){
-			call ResendTimer.startOneShot(call Random.rand16() %4000);
+			call ResendTimer.startOneShot(100 + call Random.rand16() %4000);
 		}
 		radioIsBusy=FALSE;
 	}

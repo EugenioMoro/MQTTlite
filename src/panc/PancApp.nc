@@ -16,14 +16,112 @@ module PancApp{
 implementation{
 	bool radioIsBusy=FALSE;
 	message_t pkt;
-	node nodes[255];
+	node nodes[MAX_NODES];
 	uint8_t nodeCount=0;
 	uint8_t i;
-
+	bool waitForAck=FALSE;
+	
+	//this variable stores the sequence number for each topic in relay context, SN should be incremented at each data relay 
+	uint8_t topicSN[3] = {0};
+	
+	//this is the current publish data packet to be relayed to all the 1-qos nodes
+	PublishPKT* currentPublishPkt;
+	
+	//this is the next node to be unicasted
+	uint8_t nextNode=0;
+	//this is the counter for the unicast round trial
+	uint8_t roundCount=0;
+	
+	void broadcastData(uint8_t topicId, uint16_t data){
+		if(!radioIsBusy){
+			PublishPKT* sendpkt = (PublishPKT * )(call Packet.getPayload(&pkt, sizeof(PublishPKT)));
+			//increment sequence number for that topic id
+			topicSN[topicId]++;
+			//build the packet
+			sendpkt->pktId=PUBLISH_ID;
+			sendpkt->nodeId=TOS_NODE_ID;
+			sendpkt->topicId=topicId;
+			sendpkt->data=data;
+			sendpkt->pubsn=topicSN[topicId];
+			
+			if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PublishPKT)) == SUCCESS) {
+				radioIsBusy = TRUE;
+			} else printf("failed to send in broadcastData function\n");
+			printf("PANC: data broadcasted for topic %u and SN %u\n", topicId, topicSN[topicId]);
+		}
+	}
+	
+	bool choseNextNode(){
+		if(roundCount>MAX_RETRY-1){
+			printf("Max retry exceeded or all the nodes are serviced: data relay is considered done\n");
+			return FALSE;
+		}
+		//printf("chosenext\n");
+		for(i=nextNode; i<MAX_NODES; i++){
+			//printf("chosenext for\n");
+			//if node has qos 1 and inferior sequence number
+			//NOTE: if node is not subscribed, then qos is always 0
+			if(nodes[i].topics[currentPublishPkt->topicId].qos==1 && nodes[i].topics[currentPublishPkt->topicId].seqn<topicSN[currentPublishPkt->topicId]){
+				nextNode=i;
+				//printf("nodefound\n");
+				return TRUE;
+			}
+		}
+		//here end of the nodes is reached, we check if max retry is exceeded, if not then start again
+		roundCount++;
+		//printf("roundcount %u\n", roundCount);
+		nextNode=0;
+		return choseNextNode();
+	}
+	
+	void sendData(){
+		while(radioIsBusy){
+			waitForAck=FALSE; //otherwise it will disturb other transmissions
+			printf("PANC: radio is busy, waiting...\n");
+			call GeneralPurposeTimer.startOneShot(50);
+			return;
+		}
+		if(!radioIsBusy){
+			
+			PublishPKT* sendpkt = (PublishPKT * )(call Packet.getPayload(&pkt, sizeof(PublishPKT)));
+			//build the packet
+			//printf("packet built\n");
+			sendpkt->pktId=PUBLISH_ID;
+			//printf("packet built\n");
+			sendpkt->nodeId=nextNode;
+			//printf("packet built\n");
+			sendpkt->topicId=currentPublishPkt->topicId;
+			//printf("packet built\n");
+			sendpkt->data=currentPublishPkt->data;
+			//printf("packet built\n");
+			sendpkt->pubsn=topicSN[currentPublishPkt->topicId];
+			//printf("packet built\n");
+			if(call AMSend.send(nextNode, &pkt, sizeof(PublishPKT)) == SUCCESS) {
+				radioIsBusy = TRUE;
+				waitForAck=TRUE;
+			} else printf("failed to send message in sendData function\n");
+			printf("PANC: data sent to node %u for topic %u and SN %u\n", nextNode, currentPublishPkt->topicId, topicSN[currentPublishPkt->topicId]);
+		} else printf("radio busy\n");
+	}
+	
+	//this function triggers a new reliable unicast data transmission for data
+	void triggerNewRelayRound(PublishPKT* packet){
+		//printf("trigger\n");
+		call ResendTimer.stop(); //eventually stop the ack timer
+		currentPublishPkt=packet;
+		nextNode=0;
+		roundCount=0;
+		if(choseNextNode()){
+			sendData();
+		}
+		return;
+		
+	}
+	
 	void addNewNode(uint8_t nodeId){
 		nodeCount++;
 		nodes[nodeCount-1].nodeId=nodeId;
-		nodes[nodeCount-1].pubsn=0;
+		nodes[nodeCount-1].pubsn=1; //first publish sn from node will be one, easier choice 
 		//initialize all the topics
 		for (i=0; i<3; i++){
 			nodes[nodeCount-1].topics[i].topicId=i;
@@ -93,15 +191,25 @@ implementation{
 	}
 
 	event void ResendTimer.fired(){
-		// TODO Auto-generated method stub
+		waitForAck=FALSE;
+		printf("PANC: ack from node %u not received\n", nextNode);
+		if(nextNode==MAX_NODES) nextNode=0; else nextNode++;
+		if(choseNextNode()){
+			sendData();
+		}
 	}
 
 	event void GeneralPurposeTimer.fired(){
-		// TODO Auto-generated method stub
+		waitForAck=TRUE;
+		sendData();
 	}
 
 	event void AMSend.sendDone(message_t *msg, error_t error){
+		//printf("senddone\n");
 		radioIsBusy=FALSE;
+		if(waitForAck){
+			call ResendTimer.startOneShot(ACK_TO);
+		}
 	}
 
 	event void AMControl.startDone(error_t error){
@@ -135,16 +243,44 @@ implementation{
 				PublishPKT* pubpkt = (PublishPKT*) payload;
 				printf("PANC: received publish message from node %u, data %u\n", pubpkt->nodeId, pubpkt->data);
 				if(pubpkt->qos==1){
+					//check if data is fresh
 					if(pubpkt->pubsn==nodes[pubpkt->nodeId].pubsn){
 						nodes[pubpkt->nodeId].pubsn++;
-						//publish logic here
+						sendPuback(pubpkt->nodeId, pubpkt->pubsn);
 						printf("PANC: received data is new\n");
+						//publish logic here
+						//broadcastData(pubpkt->topicId, pubpkt->data);
+						topicSN[pubpkt->topicId]++;
+						triggerNewRelayRound(pubpkt);
 					} else{
-						printf("PANC: duplicated ack received");
+						printf("PANC: duplicated ack received, SN received is %u but %u was expected\n", pubpkt->pubsn, nodes[pubpkt->nodeId].pubsn);
+						sendPuback(pubpkt->nodeId, pubpkt->pubsn);
 					}
-					sendPuback(pubpkt->nodeId, pubpkt->pubsn);
+					
+				} else { //if qos is zero
+					//broadcastData(pubpkt->topicId, pubpkt->data);
+					topicSN[pubpkt->topicId]++;
+					triggerNewRelayRound(pubpkt);
 				}
+					
+				}
+			if(len==sizeof(PubackPKT)){
+				//should first check from which node is this ack, then in case stop the ack timer, will probably need larger timeouts
+				PubackPKT* puback = (PubackPKT*) payload;
+				if(puback->nodeId==nextNode){
+					call ResendTimer.stop();
+				}
+				//update topic sequence number if needed
+				if(nodes[puback->nodeId].topics[currentPublishPkt->topicId].seqn<topicSN[currentPublishPkt->topicId])
+					nodes[puback->nodeId].topics[currentPublishPkt->topicId].seqn=topicSN[currentPublishPkt->topicId];
+				printf("PANC: puback received from node %u and SN %u\n", puback->nodeId, puback->pubsn);
+				
+				//then continue the round
+				if(choseNextNode()){
+					sendData();
+				}	
 			}
-		return msg;
+			return msg;
+			}
+		
 	}
-}
