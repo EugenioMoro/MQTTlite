@@ -53,15 +53,15 @@ implementation{
 	
 	bool choseNextNode(){
 		if(roundCount>MAX_RETRY-1){
-			printf("Max retry exceeded or all the nodes are serviced: data relay is considered done\n");
+			printf("PANC: Max retry exceeded or all the nodes are serviced: data relay is considered done\n");
 			return FALSE;
 		}
 		//printf("chosenext\n");
 		for(i=nextNode; i<MAX_NODES; i++){
 			//printf("chosenext for\n");
-			//if node has qos 1 and inferior sequence number
+			//if node has qos 1 and inferior sequence number and is not the publisher
 			//NOTE: if node is not subscribed, then qos is always 0
-			if(nodes[i].topics[currentPublishPkt->topicId].qos==1 && nodes[i].topics[currentPublishPkt->topicId].seqn<topicSN[currentPublishPkt->topicId]){
+			if(nodes[i].topics[currentPublishPkt->topicId].qos==1 && nodes[i].topics[currentPublishPkt->topicId].seqn<topicSN[currentPublishPkt->topicId] && nodes[i].nodeId!=currentPublishPkt->nodeId){
 				nextNode=i;
 				//printf("nodefound\n");
 				return TRUE;
@@ -88,7 +88,7 @@ implementation{
 			//printf("packet built\n");
 			sendpkt->pktId=PUBLISH_ID;
 			//printf("packet built\n");
-			sendpkt->nodeId=nextNode;
+			sendpkt->nodeId=nodes[nextNode].nodeId;
 			//printf("packet built\n");
 			sendpkt->topicId=currentPublishPkt->topicId;
 			//printf("packet built\n");
@@ -96,11 +96,11 @@ implementation{
 			//printf("packet built\n");
 			sendpkt->pubsn=topicSN[currentPublishPkt->topicId];
 			//printf("packet built\n");
-			if(call AMSend.send(nextNode, &pkt, sizeof(PublishPKT)) == SUCCESS) {
+			if(call AMSend.send(nodes[nextNode].nodeId, &pkt, sizeof(PublishPKT)) == SUCCESS) {
 				radioIsBusy = TRUE;
 				waitForAck=TRUE;
 			} else printf("failed to send message in sendData function\n");
-			printf("PANC: data sent to node %u for topic %u and SN %u\n", nextNode, currentPublishPkt->topicId, topicSN[currentPublishPkt->topicId]);
+			printf("PANC: data sent to node %u for topic %u and SN %u\n", nodes[nextNode].nodeId, currentPublishPkt->topicId, topicSN[currentPublishPkt->topicId]);
 		} else printf("radio busy\n");
 	}
 	
@@ -141,7 +141,7 @@ implementation{
 				return;
 			}
 		}
-		printf("PANC: subscribe error: node not found in memory\n");
+		printf("PANC: subscribe error: node %u not found in memory\n", nodeId);
 	}
 	
 	void SendConnack(uint8_t addr) {
@@ -192,7 +192,7 @@ implementation{
 
 	event void ResendTimer.fired(){
 		waitForAck=FALSE;
-		printf("PANC: ack from node %u not received\n", nextNode);
+		printf("PANC: ack from node %u not received\n", nodes[nextNode].nodeId);
 		if(nextNode==MAX_NODES) nextNode=0; else nextNode++;
 		if(choseNextNode()){
 			sendData();
@@ -267,7 +267,7 @@ implementation{
 			if(len==sizeof(PubackPKT)){
 				//should first check from which node is this ack, then in case stop the ack timer, will probably need larger timeouts
 				PubackPKT* puback = (PubackPKT*) payload;
-				if(puback->nodeId==nextNode){
+				if(puback->nodeId==nodes[nextNode].nodeId){
 					call ResendTimer.stop();
 				}
 				//update topic sequence number if needed

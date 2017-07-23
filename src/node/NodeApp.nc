@@ -21,16 +21,18 @@ implementation{
 	uint8_t i;
 	//this is sometimes useful
 	bool lastMessageAcked=FALSE;
-	
+	uint8_t pancAddr;
 	//this is for random topic subscribing
 	uint8_t currentTopic=0;
 	uint8_t currentQos;
 	
 	//this data structure is for storing to which topic the node is sub and what qos level 
-	//the first bool realtes to subscription and second bool relates to qos
+	//the first bool realates to subscription and second bool relates to qos
 	//this data structure is initialized with 0es and is lazy 
 	bool topics[3][2]= {{0,0},{0,0},{0,0}};
 	
+	//this data structure is for keeping traces of the sequence number of all the topics
+	uint8_t topicSN[3] = {0,0,0};
 	
 	//publish related
 	uint8_t selfTopic;
@@ -55,6 +57,19 @@ implementation{
 		}
 	}
 	
+	void sendPuback(uint8_t pubsn){
+		printf("NODE %u: Sending puback message\n", TOS_NODE_ID);
+		if(!radioIsBusy){
+			PubackPKT* pubpkt = (PubackPKT*) (call Packet.getPayload(&pkt, sizeof(SubackPKT)));
+			pubpkt->pktId=PUBACK_ID;
+			pubpkt->nodeId=TOS_NODE_ID;
+			pubpkt->pubsn=pubsn;
+			if(call AMSend.send(pancAddr, &pkt, sizeof(PubackPKT)) == SUCCESS) {
+				radioIsBusy = TRUE;
+			}
+		}
+	}
+	
 	void publishSomething(){
 		PublishPKT * pubpkt = (PublishPKT *)(call Packet.getPayload(&pkt, sizeof(PublishPKT)));
 		pubpkt->pktId=PUBLISH_ID;
@@ -73,7 +88,7 @@ implementation{
 			pubQos=0;
 			printf("NODE %u: publishing to topic %u with Qos 0\n", TOS_NODE_ID, selfTopic);
 		}
-		if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PublishPKT)) == SUCCESS) {
+		if(call AMSend.send(pancAddr, &pkt, sizeof(PublishPKT)) == SUCCESS) {
 				radioIsBusy = TRUE;
 			}
 	}
@@ -98,7 +113,7 @@ implementation{
 		}
 	}
 	task void startPublishing(){
-		call PublishTimer.startPeriodic(5000);
+		call PublishTimer.startPeriodicAt(TOS_NODE_ID*1000, PUBLISH_INTERVAL); //gives some random phase to the publish messages
 	}
 	void randomSubscribe(){
 		//if attempt to subscribe has been done 3 times (1 attempt per topic) then set subscribed and stop
@@ -112,6 +127,10 @@ implementation{
 			currentQos=(1-((call Random.rand16()%2)*(call Random.rand16()%2)));
 			sendSubscribe(currentTopic, currentQos);
 		}
+	}
+	
+	void processData(uint16_t val, uint8_t topicId){
+		printf("NODE %u: new data '%u' received for topic %u\n", TOS_NODE_ID, data, topicId);
 	}
 	
 	task void triggerSub(){
@@ -164,11 +183,12 @@ implementation{
 		//printf("Message received at node\n");
 		if(len == sizeof(ConnackMessagePKT)) {
 			ConnackMessagePKT* connackPKT = (ConnackMessagePKT *) payload;
-			if(connackPKT->pktID == CONNACK_ID){// && connackPKT->nodeID == TOS_NODE_ID) {
+			if(connackPKT->pktID == CONNACK_ID && connackPKT->nodeID == TOS_NODE_ID) {
 				nodeState = CONNECTED;
 				call ResendTimer.stop();
 				printf("NODE %u: CONNACK received, node connected\n", TOS_NODE_ID);
 				waitForAck=FALSE;
+				pancAddr=connackPKT->pancID;
 				post triggerSub();
 				return msg;
 			}
@@ -194,6 +214,28 @@ implementation{
 				waitForAck=FALSE;
 			}
 		}
+		if(len==sizeof(PublishPKT)){
+			PublishPKT* pubpkt = (PublishPKT*) payload;
+			//if the node is subscribed to this topic then deal with the packet
+			if(topics[pubpkt->topicId][0]){
+				printf("NODE %u: Received publish from panc\n", TOS_NODE_ID);
+				
+				//update sequence number if necessary and deal with fresh data
+				if(pubpkt->pubsn>topicSN[pubpkt->topicId]){
+					topicSN[pubpkt->topicId]=pubpkt->pubsn;
+					processData(pubpkt->data, pubpkt->topicId);
+				} else { printf("NODE %u: Received data is old\n", TOS_NODE_ID);}
+				
+				//if qos is 1 then send puback
+				if(topics[pubpkt->topicId][1]) sendPuback(pubpkt->pubsn);
+				
+			} else {
+			printf("NODE %u: Received publish but I'm not subscribed to topic %u\n", TOS_NODE_ID, pubpkt->topicId); 
+			return msg;
+			}
+			
+		}
+			
 	return msg; }
 
 	event void PublishTimer.fired(){
