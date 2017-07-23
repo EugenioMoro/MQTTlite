@@ -32,6 +32,17 @@ implementation{
 	//this is the counter for the unicast round trial
 	uint8_t roundCount=0;
 	
+	//all the packets that could be received, in order to keep memory under control
+	ConnectMessagePKT* connectPKT;
+	SubscribePKT* subpkt;
+	PublishPKT* pubpkt;
+	PubackPKT* puback;
+	
+	//same thing for all the possible sent packets
+	ConnackMessagePKT * connpkt;
+	SubackPKT* sendSubpkt;
+	PubackPKT* sendPubpkt;
+	
 	void broadcastData(uint8_t topicId, uint16_t data){
 		if(!radioIsBusy){
 			PublishPKT* sendpkt = (PublishPKT * )(call Packet.getPayload(&pkt, sizeof(PublishPKT)));
@@ -39,7 +50,7 @@ implementation{
 			topicSN[topicId]++;
 			//build the packet
 			sendpkt->pktId=PUBLISH_ID;
-			sendpkt->nodeId=TOS_NODE_ID;
+			sendpkt->nodeId=(uint8_t)TOS_NODE_ID;
 			sendpkt->topicId=topicId;
 			sendpkt->data=data;
 			sendpkt->pubsn=topicSN[topicId];
@@ -63,7 +74,7 @@ implementation{
 			//NOTE: if node is not subscribed, then qos is always 0
 			if(nodes[i].topics[currentPublishPkt->topicId].qos==1 && nodes[i].topics[currentPublishPkt->topicId].seqn<topicSN[currentPublishPkt->topicId] && nodes[i].nodeId!=currentPublishPkt->nodeId){
 				nextNode=i;
-				//printf("nodefound\n");
+				printf("nodefound sn:%u\n",topicSN[currentPublishPkt->topicId]);
 				return TRUE;
 			}
 		}
@@ -119,7 +130,15 @@ implementation{
 	}
 	
 	void addNewNode(uint8_t nodeId){
+		//check if node is already in memory (need this in case of connack not received from the node)
+		for(i=0; i<nodeCount; i++){
+			if(nodes[i].nodeId==nodeId){
+				printf("PANC: Node %u was already in memory, possible lost connack\n", nodeId);
+				return;
+			}
+		}
 		nodeCount++;
+		printf("nodecount %u\n", nodeCount);
 		nodes[nodeCount-1].nodeId=nodeId;
 		nodes[nodeCount-1].pubsn=1; //first publish sn from node will be one, easier choice 
 		//initialize all the topics
@@ -148,10 +167,10 @@ implementation{
 		printf("PANC %u: Sending connack message\n");
 		if( ! radioIsBusy) {
 			//build packet and bind it to node's packet pkt''
-			ConnackMessagePKT * connpkt = (ConnackMessagePKT * )(call Packet.getPayload(&pkt, sizeof(ConnackMessagePKT)));
+			connpkt = (ConnackMessagePKT * )(call Packet.getPayload(&pkt, sizeof(ConnackMessagePKT)));
 			connpkt->pktID = CONNACK_ID;
 			connpkt->nodeID = addr;
-			connpkt->pancID=TOS_NODE_ID;
+			connpkt->pancID=(uint8_t)TOS_NODE_ID;
 			//try and send the packet
 			if(call AMSend.send(addr, &pkt, sizeof(ConnackMessagePKT)) == SUCCESS) {
 				radioIsBusy = TRUE;
@@ -162,9 +181,9 @@ implementation{
 	void sendSuback(uint8_t addr){
 		printf("PANC: Sending suback message\n");
 		if(!radioIsBusy){
-			SubackPKT* subpkt = (SubackPKT*)(call Packet.getPayload(&pkt, sizeof(SubackPKT)));
-			subpkt->pktId=SUBACK_ID;
-			subpkt->nodeId=addr;
+			sendSubpkt = (SubackPKT*)(call Packet.getPayload(&pkt, sizeof(SubackPKT)));
+			sendSubpkt->pktId=SUBACK_ID;
+			sendSubpkt->nodeId=addr;
 			if(call AMSend.send(addr, &pkt, sizeof(SubackPKT)) == SUCCESS) {
 				radioIsBusy = TRUE;
 			}
@@ -174,10 +193,10 @@ implementation{
 	void sendPuback(uint8_t addr, uint8_t pubsn){
 		printf("PANC: Sending puback message\n");
 		if(!radioIsBusy){
-			PubackPKT* pubpkt = (PubackPKT*) (call Packet.getPayload(&pkt, sizeof(SubackPKT)));
-			pubpkt->pktId=PUBACK_ID;
-			pubpkt->nodeId=addr;
-			pubpkt->pubsn=pubsn;
+			sendPubpkt = (PubackPKT*)(call Packet.getPayload(&pkt, sizeof(PubackPKT)));
+			sendPubpkt->pktId=PUBACK_ID;
+			sendPubpkt->nodeId=addr;
+			sendPubpkt->pubsn=pubsn;
 			if(call AMSend.send(addr, &pkt, sizeof(PubackPKT)) == SUCCESS) {
 				radioIsBusy = TRUE;
 			}
@@ -222,17 +241,16 @@ implementation{
 
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		if(len==sizeof(ConnectMessagePKT)){
-			ConnectMessagePKT* connectPKT = (ConnectMessagePKT*) payload;
+			connectPKT = (ConnectMessagePKT*) payload;
 			if(connectPKT->pktID==CONNECT_ID){
 				printf("PanC: received connection message from node %u\n", connectPKT->nodeID);
 				SendConnack(connectPKT->nodeID);
 				addNewNode(connectPKT->nodeID);
 				}
-			free(connectPKT);
 			return msg;
 			}
 			if(len==sizeof(SubscribePKT)){
-				SubscribePKT* subpkt = (SubscribePKT*) payload;
+				subpkt = (SubscribePKT*) payload;
 				if(subpkt->pktId==SUBSCRIBE_ID){
 					printf("PANC: received subscribe message from node %u\n", subpkt->nodeId);
 					sendSuback(subpkt->nodeId);
@@ -240,33 +258,33 @@ implementation{
 				}
 			}
 			if(len==sizeof(PublishPKT)){
-				PublishPKT* pubpkt = (PublishPKT*) payload;
-				printf("PANC: received publish message from node %u, data %u\n", pubpkt->nodeId, pubpkt->data);
+				pubpkt = (PublishPKT*) payload;
+				printf("PANC: received publish message from node %u, data %u, topic %u\n", pubpkt->nodeId, pubpkt->data, pubpkt->topicId);
 				if(pubpkt->qos==1){
 					//check if data is fresh
-					if(pubpkt->pubsn==nodes[pubpkt->nodeId].pubsn){
-						nodes[pubpkt->nodeId].pubsn++;
+					if(pubpkt->pubsn>=nodes[pubpkt->nodeId].pubsn){
+						nodes[pubpkt->nodeId].pubsn=pubpkt->pubsn;
 						sendPuback(pubpkt->nodeId, pubpkt->pubsn);
 						printf("PANC: received data is new\n");
 						//publish logic here
 						//broadcastData(pubpkt->topicId, pubpkt->data);
-						topicSN[pubpkt->topicId]++;
+						topicSN[pubpkt->topicId]++; //here is only incremented by one since the panc keeps track
 						triggerNewRelayRound(pubpkt);
 					} else{
-						printf("PANC: duplicated ack received, SN received is %u but %u was expected\n", pubpkt->pubsn, nodes[pubpkt->nodeId].pubsn);
+						printf("PANC: duplicated data received from node %u, SN received is %u but %u was expected\n", pubpkt->nodeId, pubpkt->pubsn, nodes[pubpkt->nodeId].pubsn);
 						sendPuback(pubpkt->nodeId, pubpkt->pubsn);
 					}
 					
 				} else { //if qos is zero
 					//broadcastData(pubpkt->topicId, pubpkt->data);
-					topicSN[pubpkt->topicId]++;
+					//topicSN[pubpkt->topicId]++; qos 0 data does not increase sequence number in node->panc transaction 
 					triggerNewRelayRound(pubpkt);
 				}
-					
 				}
 			if(len==sizeof(PubackPKT)){
 				//should first check from which node is this ack, then in case stop the ack timer, will probably need larger timeouts
-				PubackPKT* puback = (PubackPKT*) payload;
+				puback = (PubackPKT*) payload;
+				if(puback->pktId!=PUBACK_ID) return msg;
 				if(puback->nodeId==nodes[nextNode].nodeId){
 					call ResendTimer.stop();
 				}
@@ -278,7 +296,7 @@ implementation{
 				//then continue the round
 				if(choseNextNode()){
 					sendData();
-				}	
+				}
 			}
 			return msg;
 			}

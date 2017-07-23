@@ -1,0 +1,20 @@
+#ifndef NODEAPP_H
+#define NODEAPP_H
+enum{
+	PUBLISH_INTERVAL=10000,
+	AM_CHANNEL = 6,
+	MAX_BACKOFF_TRIALS = 5,
+	ACK_TO=100 //milliseconds
+};
+
+typedef enum nodeStates {ORPHAN, CONNECTING, CONNECTED, SUBSCRIBING, SUBSCRIBED, PUBLISHING} nodeStates;
+
+enum topicIDs{
+	TEMPERATURE=0,
+	HUMIDITY=1,
+	LUMINOSITY=2
+};
+
+
+
+#endif /* NODEAPP_H */
