@@ -12,14 +12,12 @@ enum{
 typedef struct topic{
 	uint8_t topicId;
 	uint8_t qos;
-	uint8_t seqn;
 	bool subscribed;
 } topic;
 
 typedef struct node{
 	uint8_t nodeId;
 	topic topics[3];
-	uint8_t pubsn;	
 } node;
 
 enum topicIDs{

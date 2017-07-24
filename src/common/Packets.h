@@ -30,13 +30,11 @@ typedef nx_struct PublishPKT{
 	nx_uint8_t topicId;
 	nx_uint16_t data;
 	nx_uint8_t qos;
-	nx_uint8_t pubsn;
 } PublishPKT;
 
 typedef nx_struct PubackPKT{
 	nx_uint8_t pktId;
 	nx_uint8_t nodeId;
-	nx_uint8_t pubsn;
 } PubackPKT;
 
 enum {

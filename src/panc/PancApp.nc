@@ -21,12 +21,6 @@ implementation{
 	uint8_t i;
 	bool waitForAck=FALSE;
 	
-	//this variable stores the sequence number for each topic in relay context, SN should be incremented at each data relay 
-	uint8_t topicSN[3] = {0};
-	
-	//this is the current publish data packet to be relayed to all the 1-qos nodes
-	PublishPKT* currentPublishPkt;
-	
 	//this is the next node to be unicasted
 	uint8_t nextNode=0;
 	//this is the counter for the unicast round trial

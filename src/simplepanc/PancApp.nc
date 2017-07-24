@@ -37,7 +37,7 @@ implementation{
 	uint8_t currentTrials=0;
 
 	
-	//all the packets that could be received, in order to keep memory under control (i have had problem of overflows)
+	//all the packets that could be received, in order to keep memory under control (i have had problems of overflows)
 	ConnectMessagePKT* connectPKT;
 	SubscribePKT* subpkt;
 	PublishPKT* pubpkt;
@@ -251,6 +251,7 @@ implementation{
 			}
 	
 			//save data and reset current node counter
+			//the action of resetting the current node counter and the data value will effectively make the round-robin relay to start again from the beginning
 			currentData=pubpkt->data;
 			currentNode=0;
 			publisherNode=pubpkt->nodeId;

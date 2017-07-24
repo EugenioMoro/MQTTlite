@@ -77,6 +77,30 @@ implementation{
 		pubpkt->topicId=selfTopic;
 		pubpkt->data= data;
 		if(call Random.rand16()%2){
+			currentQos=1;
+			pubpkt->qos=1;
+			pubQos=1;
+			waitForAck=TRUE;
+			printf("NODE %u: publishing to topic %u with Qos 1\n", TOS_NODE_ID, selfTopic);
+			nodeState=PUBLISHING;
+		} else {
+			currentQos=0;
+			pubpkt->qos=0;
+			pubQos=0;
+			printf("NODE %u: publishing to topic %u with Qos 0\n", TOS_NODE_ID, selfTopic);
+		}
+		if(call AMSend.send(pancAddr, &pkt, sizeof(PublishPKT)) == SUCCESS) {
+				radioIsBusy = TRUE;
+			}
+	}
+	//this should be called each time the node resends a publish message, it will use the chosen qos and not a new random one
+	void resendPublish(){
+		PublishPKT * pubpkt = (PublishPKT *)(call Packet.getPayload(&pkt, sizeof(PublishPKT)));
+		pubpkt->pktId=PUBLISH_ID;
+		pubpkt->nodeId=(uint8_t)TOS_NODE_ID;
+		pubpkt->topicId=selfTopic;
+		pubpkt->data= data;
+		if(currentQos){
 			pubpkt->qos=1;
 			pubQos=1;
 			waitForAck=TRUE;
@@ -195,7 +219,7 @@ implementation{
 		switch (nodeState){
 			case CONNECTING:SendConnect(); return;
 			case SUBSCRIBING:sendSubscribe(currentTopic,currentQos); return;
-			case PUBLISHING:publishSomething(); return; //note that data to publish is consistent at each resend and set globally when it sends the first message
+			case PUBLISHING:resendPublish(); return; //note that data to publish is consistent at each resend and set globally when it sends the first message
 			default: return;
 		}
 	}
@@ -261,8 +285,9 @@ implementation{
 	//this event starts the publish procedure
 	event void PublishTimer.fired(){
 		if(nodeState==PUBLISHING){
-			printf("NODE %u: Cannot publish: node is busy\n", TOS_NODE_ID);
-			return;
+			printf("NODE %u: New data is available to publish, discarding old data\n", TOS_NODE_ID);
+			call ResendTimer.stop();
+			waitForAck=FALSE;
 		}
 		//a random data is set globally, this means that the data is consistent at each resend if the qos for this pub is 1
 		data = call Random.rand16();
